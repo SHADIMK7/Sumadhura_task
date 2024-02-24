@@ -9,19 +9,20 @@ from rest_framework.authtoken.models import Token
 
 
 class Registration(generics.CreateAPIView):
+    serializer_class = RegistrationSerializer
         
     def post(self, request):
-        serializer = RegistrationSerializer(data=request.data)
+        serializer = self.get_serializer(data=request.data)
         
         if serializer.is_valid():
             account = serializer.save()
             
             token, created = Token.objects.get_or_create(user=account)
-            print('token si ',token)
+            print('token is', token)
             token_key = token.key
 
             data = {
-                'response': "REGISTRATION SUCCESSFULL",
+                'response': "REGISTRATION SUCCESSFUL",
                 'username': account.username,
                 'token': token_key
             }
@@ -31,10 +32,12 @@ class Registration(generics.CreateAPIView):
 
     
 class Logout(generics.DestroyAPIView):
-    
+    permission_classes = [permissions.IsAuthenticated]
+
     def post(self, request):
         request.user.auth_token.delete()
-        return Response(status=status.HTTP_200_OK)
+        return Response({"detail": "Successfully logged out."}, status=status.HTTP_200_OK)
+
 
 class VendorListCreateView(generics.ListCreateAPIView):
     queryset = Vendor.objects.all()
